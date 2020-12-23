@@ -1,0 +1,38 @@
+---
+title: 'Qual é a senha? '
+author: ''
+date: '2020-01-13'
+slug: []
+categories: []
+tags:
+  - Tidytuesday
+authors: []
+description: ''
+externalLink: ''
+series: []
+---
+
+Nesse post vamos explorar dados de senhas! Cortesia do grupo [rfordatascience](https://github.com/rfordatascience/tidytuesday) o _tidytuesday_ é um projeto que oferece um _data set_ por semana para discussão e exploração do _tidyverse_.
+Os dados dessa semana é sobre [passwords](https://github.com/rfordatascience/tidytuesday/blob/master/data/2020/2020-01-14/readme.md) ou senhas em portugues.
+
+![](https://cordelia.typepad.com/.a/6a00d8345269c569e2013484aa17e2970c-800wi)
+
+```{r setup and libraries, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(tidyverse)
+library(kableExtra)
+```
+
+```{r message=FALSE,echo=FALSE,warning=FALSE,cache=FALSE, include=FALSE}
+tuesdata <- tidytuesdayR::tt_load('2020-01-14') 
+senhas <- tuesdata$passwords
+```
+Todo mundo tem senhas. 
+
+```{r echo=FALSE}
+senhas %>%
+  head(3) %>% 
+  kbl(digits = 3) %>%
+  kable_styling(full_width = F, font_size = 12)
+```
+

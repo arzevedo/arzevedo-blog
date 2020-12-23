@@ -1,0 +1,255 @@
+---
+title: "HBO's Chernobyl screenplay"
+author: "Arthur Azevedo"
+date: '2019-06-08'
+slug: []
+categories: []
+tags:
+- Text analysis
+- Tv series
+authors: []
+description: ''
+externalLink: ''
+series: []
+---
+
+<script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
+
+
+<div id="first-things-first-️" class="section level1">
+<h1>First things first ☢️</h1>
+<p>I must tell you right away that I loved the series the political, horror and drama were entangled in a way that amazed me so much that I couldn’t wait for the next episode. When I saw Mazin on twitter saying that he gave open access to the screenplay i had to have a look. One last thing. This code/text may contain spoilers. I will give some warning before dropping something major to the plot. But be warned.</p>
+<p>So… let’s get the data</p>
+<div id="extracting-the-data-️" class="section level2">
+<h2>Extracting the data ☢️</h2>
+<p>I’ll download the screenplays for reproducibility purposes. I made a loop in the <code>download.file</code> function for every episode.</p>
+<pre class="r"><code>episode_name &lt;- c(&quot;11_23_45&quot;, &quot;2Please-Remain-Calm&quot;, &quot;3Open-Wide-O-Earth&quot;,
+                  &quot;4The-Happiness-Of-All-Mankind&quot;, &quot;5Vichnaya-Pamyat&quot;)
+
+for(episode in episode_name){
+  download.file(
+    paste0(&quot;https://johnaugust.com/wp-content/uploads/2019/06/Chernobyl_Episode-&quot;,
+           episode, &quot;.pdf&quot;), 
+    paste0(episode, &quot;.pdf&quot;), mode = &quot;wb&quot;
+  )
+}</code></pre>
+</div>
+<div id="assembling-️" class="section level2">
+<h2>Assembling ☢️</h2>
+<p>The .pdf format is pleasant to work with text. Using the <code>pdf_text</code> function from the <code>pdftools</code> package we can assemble the text into lists. Then we merge all in a <em>tibble</em>.</p>
+<pre class="r"><code>pdf_names &lt;- paste0(episode_name, &quot;.pdf&quot;)
+raw_text &lt;- map(pdf_names, pdf_text)
+
+chernobyl &lt;- tibble(episode = pdf_names, text = raw_text) %&gt;% 
+  mutate(
+    episode =
+      case_when(
+        .$episode == &quot;11_23_45.pdf&quot;                      ~ &quot;1:23:45&quot;,
+        .$episode == &quot;2Please-Remain-Calm.pdf&quot;           ~ &quot;Please Remain Calm&quot;,
+        .$episode == &quot;3Open-Wide-O-Earth.pdf&quot;            ~ &quot;Open Wide, O Earth&quot;,
+        .$episode == &quot;4The-Happiness-Of-All-Mankind.pdf&quot; ~ &quot;The Happiness Of All Mankind&quot;,
+        TRUE           ~ &quot;Vichnaya Pamyat&quot;
+      )
+  )</code></pre>
+</div>
+<div id="tidying-️" class="section level2">
+<h2>Tidying ☢️</h2>
+<p><a href="https://www.tidyverse.org/learn/">The <em>tidy</em> format</a> makes easy handling data. Julia Silge and David Robinson defining tidy text format as being a table with one token per row. A token is a meaningful unit of text.
+With all that said, let’s travel to the north of Ukraine.</p>
+<pre class="r"><code>chernobyl_tidy &lt;- chernobyl %&gt;% 
+  unnest %&gt;% # pdfs_text is a list
+  mutate(pag = 1:292) %&gt;% 
+  unnest_tokens(word, text, strip_numeric = TRUE) %&gt;%
+  mutate(episode = factor(episode,
+                          levels = c(
+                            &quot;1:23:45&quot;, &quot;Please Remain Calm&quot;, &quot;Open Wide, O Earth&quot;,
+                            &quot;The Happiness Of All Mankind&quot;, &quot;Vichnaya Pamyat&quot;
+                          )))</code></pre>
+<pre><code>## Warning: `cols` is now required when using unnest().
+## Please use `cols = c(text)`</code></pre>
+</div>
+<div id="filtering" class="section level2">
+<h2>Filtering</h2>
+<p>Create a <em>data set</em> without stop words.</p>
+<pre class="r"><code>chernobyl_tidy_fil &lt;- chernobyl_tidy %&gt;% 
+  anti_join(stop_words, by = &quot;word&quot;)
+
+characters &lt;- c(&quot;legasov&quot;, &quot;shcherbina&quot;, &quot;dyatlov&quot;, &quot;bacho&quot;, &quot;pavel&quot;,
+                &quot;shcherbina&quot;, &quot;khomyuk&quot;, &quot;toptunov&quot;, &quot;akimov&quot;, &quot;lyudmilla&quot;,
+                &quot;bryukhanov&quot;, &quot;tarakanov&quot;, &quot;fomin&quot;, &quot;sitnikov&quot;, &quot;gorbachev&quot;,
+                &quot;vasily&quot;, &quot;pikalov&quot;, &quot;dmitri&quot;, &quot;yuvchenko&quot;, &quot;gorbachenko&quot;,
+                &quot;stolyarchuk&quot;, &quot;boris&quot;, &quot;charkov&quot;, &quot;vetrova&quot;, &quot;shadov&quot;,
+                &quot;garo&quot;, &quot;stepashin&quot;)</code></pre>
+</div>
+<div id="ploting-frequency-️" class="section level2">
+<h2>Ploting Frequency ☢️</h2>
+<pre class="r"><code>reorder_within &lt;- function(x, by, within, fun = mean, sep = &quot;___&quot;, ...) {
+  new_x &lt;- paste(x, within, sep = sep)
+  stats::reorder(new_x, by, FUN = fun)
+}
+scale_x_reordered &lt;- function(..., sep = &quot;___&quot;) {
+  reg &lt;- paste0(sep, &quot;.+$&quot;)
+  ggplot2::scale_x_discrete(labels = function(x) gsub(reg, &quot;&quot;, x), ...)
+}
+chernobyl_tidy_fil %&gt;% 
+  group_by(episode, word) %&gt;% 
+  count(sort = TRUE) %&gt;% 
+  filter(!word %in% characters) %&gt;% 
+  group_by(episode) %&gt;% 
+  top_n(10, n) %&gt;%
+  ungroup() %&gt;%
+  ggplot(aes(reorder_within(word, n, episode), n))+
+  geom_col(fill = &quot;#0D0D0D&quot;)+
+  scale_x_reordered()+
+  facet_wrap(~episode, scales = &quot;free_y&quot;)+
+  coord_flip()+
+  theme_minimal()+theme(legend.position = &quot;none&quot;)+
+  labs(caption = &quot;Viz: @RiversArthur \nData: https://johnaugust.com &quot;,
+       x = NULL, y = NULL, title = &quot;Most frequent words&quot;,
+       subtitle = &quot;Without stop words and characters names&quot;)+
+  theme(panel.background = element_rect(fill = &quot;#F2E205&quot;), strip.text = element_text(size = 13),
+        panel.grid.major.y = element_blank(), panel.grid.major = element_blank(),
+        axis.text.y = element_text(size = 10),
+        plot.background = element_rect(fill = &quot;#F2E205&quot;, color = &quot;#F2E205&quot;))</code></pre>
+<p><img src="/posts/2020-12-21-hbo-s-chernobyl-screenplay/index.en_files/figure-html/Most%20frequent%20word-1.png" width="672" style="display: block; margin: auto;" />
+Here we see the most words in each episode. I’ve filtered the stop words and character names because Legasov appears just too much in every episode besides the first one. After that it was hole some see the major topics appears. Remember the <em>spoiler</em> embargo for this miniseries isn’t over yet. So, we can say that the first episode is all about a building or reactor that may or may not be on fire. The second also has fire but has water too and soldiers uses radio. Well you got the idea. Next, we’ll see what the different episodes have of different among them.</p>
+</div>
+<div id="tf-idf-or-я-люблю-тебя-родина-️" class="section level2">
+<h2>TF-IDF or Я люблю тебя родина ☢️</h2>
+<p>The idea of tf-idf is to find the important words for the content of each episode by decreasing the weight for the commonly used words and increasing the weight for words that are not used very much.</p>
+<pre class="r"><code>chernobyl_tidy_fil_per_epi &lt;- chernobyl_tidy_fil %&gt;% 
+  count(episode, word, sort = TRUE) %&gt;% 
+  ungroup()
+
+total_words &lt;- chernobyl_tidy_fil_per_epi %&gt;% 
+  group_by(episode) %&gt;% 
+  summarise(total = sum(n))
+
+chernobyl_tidy_fil_per_epi &lt;- left_join(chernobyl_tidy_fil_per_epi, total_words,
+                                        by = &quot;episode&quot;)
+
+chernobyl_tidy_fil_per_epi &lt;- chernobyl_tidy_fil_per_epi %&gt;%
+  bind_tf_idf(word, episode, n )
+
+chernobyl_tidy_fil_per_epi %&gt;%
+  arrange(desc(tf_idf)) %&gt;%
+  mutate(word = factor(word, levels = rev(unique(word)))) %&gt;%
+  group_by(episode) %&gt;%
+  top_n(10) %&gt;% 
+  ungroup %&gt;% 
+  ggplot(aes(reorder_within(word, tf_idf, episode), tf_idf)) +
+  geom_col(show.legend = FALSE, fill = &quot;#0D0D0D&quot;)+
+  facet_wrap(~episode, ncol = 1, scales = &quot;free_y&quot;) + 
+  coord_flip()+
+  scale_x_reordered()+ scale_y_continuous(labels = c(&quot;Lower TF-IDF&quot;,
+                                                     &quot;Higher TF-IDF&quot;),
+                                          breaks = c(0.001,.033))+
+  theme_minimal()+theme(legend.position = &quot;none&quot;)+
+  labs(caption = &quot;Viz: @RiversArthur \nData: https://johnaugust.com &quot;,
+       x = NULL, y = NULL, title = &quot;Highest tf-idf words in each of Chernobyl&#39;s episodes&quot;,
+       subtitle = &quot;Top 10 Words&quot;)+
+  theme(panel.background = element_rect(fill = &quot;#F2E205&quot;), strip.text = element_text(size = 13),
+        panel.grid.major = element_blank(), panel.grid = element_blank(),
+        axis.text.y = element_text(size = 12),
+        plot.background = element_rect(fill = &quot;#F2E205&quot;, color = &quot;#F2E205&quot;))</code></pre>
+<p><img src="/posts/2020-12-21-hbo-s-chernobyl-screenplay/index.en_files/figure-html/TF-IDF-1.png" width="672" style="display: block; margin: auto;" />
+This time we don’t filter the most frequent words because their weight is important to see the most important words in each episode. Aside for the diverse Russian character names (that may indicate several new characters per episode), there’s also some key words. The immediate aftermath of the catastrophe in the second episode is marked by <em>loudspeaker</em>. The badass miners that that enter headfirst in solving the problem on the third episode also arise in the top 10.</p>
+<pre class="r"><code>chernobyl_bigram &lt;- chernobyl_tidy_fil %&gt;% 
+  unnest_tokens(bigram, word, token = &quot;ngrams&quot;, n = 2) %&gt;%
+  separate(bigram, c(&quot;word1&quot;, &quot;word2&quot;), sep = &quot; &quot;) %&gt;%
+  filter(!word1 %in% stop_words$word,
+         !word2 %in% stop_words$word) %&gt;%
+  group_by(episode) %&gt;%
+  count(word1, word2, sort = TRUE) %&gt;%
+  filter(n &gt; 4) %&gt;% 
+  graph_from_data_frame()
+
+a &lt;- grid::arrow(type = &quot;closed&quot;, length = unit(.10, &quot;inches&quot;))
+
+ggraph(chernobyl_bigram, layout = &quot;fr&quot;) +  
+  geom_edge_link(aes(edge_alpha = n), show.legend = FALSE, arrow = a, end_cap = circle(.05, &#39;inches&#39;)) +
+  geom_node_point(color = &quot;#0D0D0D&quot;, size = 4, alpha = 0.5) +  
+  geom_node_text(aes(label = name), vjust = 1, hjust = 1, color = &quot;#0D0D0D&quot;, size = 4) +  
+  theme_void()+
+  labs(caption = &quot;Viz: @RiversArthur \nData: https://johnaugust.com &quot;)+
+  theme(panel.background = element_rect(fill = &quot;#F2E205&quot;),plot.background = element_rect(fill = &quot;#F2E205&quot;,
+                                                                                         color = &quot;#F2E205&quot;))</code></pre>
+<p><img src="/posts/2020-12-21-hbo-s-chernobyl-screenplay/index.en_files/figure-html/Relationship%20between%20words-1.png" width="960" style="display: block; margin: auto;" /></p>
+</div>
+<div id="sentiment-️" class="section level2">
+<h2>Sentiment ☢️</h2>
+<p>Now let’s perform a sentiment analysis on the bigram data, we can examine how often sentiment-associated words are preceded by not or other negative words. We could use this to ignore or even reverse their contribution to the sentiment score.</p>
+<pre class="r"><code>afinn &lt;- get_sentiments(lexicon = &quot;afinn&quot;)
+negation_words &lt;- c(&quot;not&quot;, &quot;no&quot;, &quot;never&quot;, &quot;without&quot;)
+
+negative_words &lt;- chernobyl_tidy %&gt;% 
+  unnest_tokens(bigram, word, token = &quot;ngrams&quot;, n = 2) %&gt;%
+  separate(bigram, c(&quot;word1&quot;, &quot;word2&quot;), sep = &quot; &quot;) %&gt;%
+  filter(word1 %in% negation_words) %&gt;% 
+  inner_join(afinn, by = c(&quot;word2&quot; = &quot;word&quot;)) %&gt;% 
+  count(word2, value, sort = TRUE) %&gt;% 
+  ungroup()
+
+negative_words %&gt;% 
+  mutate(contribution = value * n) %&gt;% 
+  arrange(desc(abs(contribution))) %&gt;% 
+  head(20) %&gt;% 
+  mutate(word2 = fct_reorder(word2, contribution)) %&gt;% 
+  ggplot(aes(word2, n * value, fill = n * value &gt; 0))+
+  geom_col(show.legend = FALSE)+
+  scale_fill_manual(values = c(&quot;#9CFF59&quot;, &quot;white&quot;))+
+  labs(x = &quot;Words preceded by negative words&quot;, 
+       title = &quot;Words that may deceive the analises&quot;,
+       y = &quot;Sentiment score * number of occurrences&quot;,
+       caption = &quot;Viz: @RiversArthur \nData: https://johnaugust.com &quot;)+
+  coord_flip()+
+  theme(panel.background = element_rect(fill = &quot;#F2E205&quot;),panel.grid.major.y = element_blank(),
+        panel.grid.major = element_blank(),
+        plot.background = element_rect(fill = &quot;#F2E205&quot;,
+                                       color = &quot;#F2E205&quot;))</code></pre>
+<p><img src="/posts/2020-12-21-hbo-s-chernobyl-screenplay/index.en_files/figure-html/wrong%20sentiment-1.png" width="672" /></p>
+<pre class="r"><code>#chernobyl_tidy %&gt;% 
+#  inner_join(afinn %&gt;% 
+#               filter(value &lt; 0)) %&gt;% 
+#  count(word, sort = TRUE)
+
+cher_afin &lt;- chernobyl_tidy %&gt;% 
+  inner_join(get_sentiments(&quot;afinn&quot;)) %&gt;%
+  group_by(index = pag %/% 5) %&gt;% 
+  summarise(sentiment = sum(value)) %&gt;% 
+  mutate(method = &quot;AFINN&quot;)
+
+cher_bing_ncr &lt;- bind_rows(
+  chernobyl_tidy %&gt;% 
+    inner_join(get_sentiments(&quot;bing&quot;)) %&gt;% 
+    mutate(method = &quot;BING&quot;),
+  chernobyl_tidy %&gt;% 
+    inner_join(get_sentiments(&quot;nrc&quot;) %&gt;% 
+                 filter(sentiment %in% c(&quot;positive&quot;, &quot;negative&quot;))) %&gt;% 
+    mutate(method = &quot;NCR&quot;)
+) %&gt;%  
+  count(method, index = pag %/% 5, sentiment) %&gt;% 
+  spread(sentiment, n, fill = 0) %&gt;% 
+  mutate(sentiment = positive - negative)
+
+bind_rows(
+  cher_afin, cher_bing_ncr) %&gt;% 
+  ggplot(aes(index, sentiment, fill = method)) +
+  geom_col(show.legend = FALSE)+
+  geom_vline(xintercept = c(12*1:4))+
+  facet_wrap(~method, ncol = 1, scales = &quot;free_y&quot;)+
+  scale_fill_manual(values = c(&quot;AFINN&quot; = &quot;#9CFF59&quot;, &quot;BING&quot; = &quot;#000000&quot;,
+                               &quot;NCR&quot; = &quot;#F2E205&quot;))+
+  labs(caption = &quot;Viz: @RiversArthur \nData: https://johnaugust.com &quot;,
+       subtitle = &quot;Each box is one episode&quot;,
+       x = NULL, y = &quot;Sentiment score&quot;, title = &quot;Diferent sentiments scores by different methods&quot;)+
+  theme_minimal()+
+  theme(panel.background = element_rect(fill = &quot;white&quot;), strip.text = element_text(size = 13),
+        panel.grid.major = element_blank(),
+        axis.text.y = element_text(size = 10),
+        plot.background = element_rect(fill = &quot;white&quot;, color = &quot;white&quot;))</code></pre>
+<p><img src="/posts/2020-12-21-hbo-s-chernobyl-screenplay/index.en_files/figure-html/more%20sentiment-1.png" width="960" style="display: block; margin: auto;" /></p>
+<p>And there you go, isn’t the happiest series in the word but it sure was captivating.</p>
+<p>Now we wait the Russian <a href="https://www.independent.co.uk/arts-entertainment/tv/news/chernobyl-hbo-ban-russia-tv-series-communist-party-response-a8958536.html">response</a>.</p>
+</div>
+</div>

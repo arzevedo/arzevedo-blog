@@ -1,0 +1,127 @@
+---
+title: O índice Big Mac
+author: ''
+date: '2020-12-22'
+slug: []
+categories: []
+tags:
+  - Economy
+  - Tidytuesday
+authors: []
+description: ''
+externalLink: ''
+series: []
+---
+
+```{r setup and libraries, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, dpi = 300, dev = "svg")
+library(tidyverse)
+library(lubridate)
+library(kableExtra)
+library(patchwork)
+```
+
+Cortesia do grupo [rfordatascience](https://github.com/rfordatascience/tidytuesday), o _tidytuesday_ é um projeto que oferece dados toda semana para discussão e exploração do _tidyverse_.
+Essa semana temos o [índice big mac](https://pt.wikipedia.org/wiki/%C3%8Dndice_Big_Mac)
+
+Na página da wikipedia:
+
+> Pelo conceito de [Paridade de Poder de Compra](https://pt.wikipedia.org/wiki/Paridade_do_poder_de_compra), a longo prazo o mercado de câmbio deveria se ajustar para que o valor de um dólar fosse equivalente em qualquer país, O princípio é que o Big Mac da cadeia de fast food McDonald's é feito com os mesmos ingredientes em quase todos os lugares [pesquisados](https://www.economist.com/news/2020/07/15/the-big-mac-index), inclusive a margem de contribuição por produto. Se houvesse paridade, o preço de um Big Mac, deveria ser o mesmo em todo o mundo em dólares.
+
+
+```{r message=FALSE,echo=FALSE,warning=FALSE,cache=FALSE, include=FALSE}
+big_mac <- read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2020/2020-12-22/big-mac.csv') %>% 
+  transmute(data = date, moeda = currency_code, pais = name,
+            preco_BM = local_price, preco_dolar = dollar_price,
+            razao_dolar = dollar_ex, pib_dol = gdp_dollar,
+            preco_bigmac_adj = adj_price)
+```
+Uma olhada nos dados
+```{r }
+big_mac %>% head() %>% 
+  kbl(digits = 3) %>%
+  kable_styling(full_width = F, font_size = 12)
+```
+O preço do Big Mac é dado pela moeda local, ou seja, em 2000 um Big Mac custava R$2,95... e o dolar custava 1,6 reais.
+
+Não sou economista mas lembro que a argentina, historicamente, lastreia o peso com o dollar. Vemos isso na primeira linha da tabela.
+
+# Brasil 
+Primeiro vamos ver como o Brasil se comportou atraves dos anos com relação ao preço de bigmacs
+
+```{r fig.width=9}
+plot_1 <- big_mac %>% 
+  filter(pais == "Brazil", year(data) >= 2011) %>% 
+  ggplot(aes(x = data, preco_BM)) +
+  geom_line(size = 2, color = "#DA291C")+
+  labs(title = "Preço do Big Mac no Brasil", x = NULL, y = NULL) +
+  scale_y_continuous(labels = scales::label_number(prefix = "R$ ", decimal.mark = ",")) +
+  theme_classic() +
+  theme(panel.background = element_rect(fill = "#FFC72C"),
+        plot.background = element_rect(fill = "#FFC72C"),
+        panel.grid.major.y = element_line(color = "gray87", linetype = 2), 
+        panel.grid.major.x = element_blank(), 
+        panel.grid.minor.x = element_blank()
+        )
+plot_2 <- big_mac %>% 
+  filter(pais == "Brazil") %>% drop_na() %>% 
+  ggplot(aes(x = data, preco_bigmac_adj*preco_dolar)) +
+  geom_line(size = 2, color = "#DA291C")+
+  #ylim(0,4) +
+  scale_y_continuous(labels = scales::label_number(prefix = "R$ ", decimal.mark = ",")) +
+  labs(title = "Preço do Big Mac ajustado pelo PIB brasileiro", x = NULL, y = NULL) +
+  #scale_y_continuous(labels = scales::dollar) +
+  theme_classic() +
+  theme(panel.background = element_rect(fill = "#FFC72C"),
+        plot.background = element_rect(fill = "#FFC72C"),
+        panel.grid.major.y = element_line(color = "gray87", linetype = 2), 
+        panel.grid.major.x = element_blank(), 
+        panel.grid.minor.x = element_blank()
+        )
+(plot_1/plot_2)+plot_annotation(tag_levels = 'A')
+  
+```
+O preço do BM acompanhou a inflação aqui no Brasil (A). Observando o preço ajustado pelo PIB, atingiu os 9 reais brutos de 2011 (B). 
+
+
+# Qual é o pais com o Big mac mais caro (em dolares)?
+
+```{r background="red"}
+big_mac %>% select(data, pais, preco_bigmac_adj) %>% 
+  arrange(desc(preco_bigmac_adj)) %>% head(3) %>% 
+  kbl(digits = 3, caption = "Big macs mais caros") %>% 
+  kable_styling(full_width = F, font_size = 12)
+```
+Wow! Aparentemente os paises nórdicos são aqueles com os maiores preços de Big Mac. Em 2011 o MC na Noruega cobrava 7,43 dolares (ajustadon pelo PIB(O que no caso desses paises é bem alto)).
+Será que paises desenvolvidos cobram mais caro no BM
+
+## E em qual pais é mais barato
+
+```{r}
+big_mac %>% select(data, pais, preco_bigmac_adj) %>% 
+  arrange((preco_bigmac_adj)) %>% head(3) %>% 
+  kbl(digits = 3, caption = "Big macs mais baratos") %>% 
+  kable_styling(full_width = F, font_size = 12)
+```
+
+## E em 2020 ?
+
+```{r}
+big_mac %>% select(data, pais, preco_bigmac_adj) %>%
+  group_by(pais) %>% top_n(n = 1, wt = data) %>% ungroup() %>% 
+  filter(year(data) == 2020) %>% 
+  arrange(desc(preco_bigmac_adj)) %>% head(3) %>% 
+  kbl(digits = 3, caption = "Big Macs mais caros de 2020") %>% 
+  kable_styling(full_width = F, font_size = 12)
+```
+Suiça ganhou por pouco da Noruega e o pais natal do Big Mac ficou em quinto lugar!
+
+```{r}
+big_mac %>% select(data, pais, preco_bigmac_adj) %>%
+  group_by(pais) %>% top_n(n = 1, wt = data) %>% ungroup() %>% 
+  filter(year(data) == 2020) %>% 
+  arrange((preco_bigmac_adj)) %>% head(3) %>% 
+  kbl(digits = 3, caption = "Big Macs mais baratos de 2020") %>%
+  kable_styling(full_width = F, font_size = 12)
+```
+O Brasil aparece em 10º lugar na lista de BM mais baratos do mundo.
