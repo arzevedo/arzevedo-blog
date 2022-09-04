@@ -1,0 +1,316 @@
+---
+title: "Ponderação por probabilidade inversa <br>e<br> modelos estruturais marginais "
+author: "Arthur R. Azevedo<br>"
+date: "06/09/22"
+format:
+  revealjs:
+    chalkboard: true 
+    theme: solarized
+editor: visual
+---
+
+# Uma revisão do capítulo 12 do livro _Causal Inference: What If_ por Miguel Hernán 
+
+# A pergunta causal
+
+
+## A pergunta causal - 12.1
+- O exemplo do capítulo é sobre o ganho de peso em Kg em pessoas que pararam de fumar.
+- Queremos estimar o efeito causal médio.
+
+Seja $A = 1$ se o indivíduo parar de fumar. Definimos o efeito causal médio (ATE) como: 
+
+$$
+\begin{equation}
+\tag{*}
+E[Y^{a = 1}] - E[Y^{a = 0}]
+\end{equation}
+$$
+- Precisamos lidar com os confundidores como por exemplo a idade, pessoas mais velhas pararam mais de fumar do as mais novas nesse estudo (_surrogate effect_).
+
+
+## A pergunta causal
+Por isso, 
+
+$$\hat E[Y|A=1] - \hat E[Y|A=0]$$
+é uma estimativa viesada de $(*)$
+
+
+# Estimando os pesos da probabilidade inversa
+
+## Estimando os pesos da probabilidade inversa - 12.2
+
+- A ponderação por probabilidade inversa (IPw) cria uma pseudo população tal que remove o efeito dos confundidores no tratamento $A$. 
+
+- De forma a tornar $A$ e $L$ (conjunto de confundidores) independentes na pseudo população.
+
+- Isso ocorre porque estamos ponderando cada indivíduo pelo inverso da probabilidade dele receber o tratamento.
+
+## Estimando os pesos da probabilidade inversa - 12.2
+
+De forma que podemos escrever a média padronizada da pseudo população como
+
+$$E_{\text{ps}}[Y|A=a] = \sum_l E[Y|A=a,L=l]P(L=l)$$
+Onde, sob permutação condicional.
+
+$$E[Y^a] = E_{ps}[Y|A=a]$$
+
+## Estimando os pesos da probabilidade inversa - 12.2
+
+Definimos o peso $W$ como
+
+$$W^A = \frac{1}{f(A|L)}$$
+Onde, para tratamentos dicotômicos
+
+$$
+f(A|L) = 
+\begin{cases}
+    P(A=1|L), & \text{se tratado} \\
+    P(A=0|L) = 1- P(A=1|L), & \text{c.c.} 
+ \end{cases}
+ $$
+
+- Estimar $W$ como feito no Cap. 2 se torna inviável.
+- $P(A=1|L)$ é o **escore de propensão**
+
+## Pausa para lembrar do objetivo
+
+Nosso objetivo é chegar em 
+
+$$\hat E_{\text{ps}}[Y|A=1] - \hat E_\text{ps}[Y|A=0]$$
+que é a estimativa para
+
+$$E[Y|A=1]-E[Y|A=0] $$
+onde, se não houver confundimento para o efeito do tratamento $A$ é uma estimativa não viesada para
+
+$$E[Y^{a=1}]-E[Y^{a=0}]$$
+
+
+## Estimando os pesos da probabilidade inversa - 12.2
+
+Podemos estimar $W$
+
+$$ \hat W = \begin{cases} \frac{1}{\hat P(A=1|L)}, & \text{se tratado} \\ \frac{1}{1- \hat P(A=1|L)}, & \text{c.c.} \end{cases}$$
+
+Usando regressão logística  !
+
+E enfim podemos estimar o efeito causal ao ajustar equações de estimação generalizadas (GEE) com o fator de ponderação o $\hat W$, de forma que
+
+$$E[Y|A]=\theta_0 + \theta_1 A $$
+
+# Probabilidade inversa ponderada estabilizada
+
+## Probabilidade inversa ponderada estabilizada 12.3
+
+Antes a IPw era definida com probabilidades iguais para todas as unidades.
+
+Nessa seção exploramos a ponderação de forma a estabelecer diferentes probabilidades para cada unidade em receber o tratamento (**sem depender de $L$**).
+
+## Probabilidade inversa ponderada estabilizada 12.3
+
+É comum determinar a probabilidade de seleção para tratamento na pseudo população igual a proporção de indivíduos tratados na amostra. 
+De forma que o IPw seja tal que
+
+$$\text{IPw}^I = \begin{cases} \frac{P(A=1)}{f(A|L)}, & \text{se tratado} \\ \frac{P(A=0)}{f(A|L)}, & \text{c.c.} \end{cases} \\ = \frac{f(A)}{f(A|L)} \;\;\;\;\;\;\;\;\;\;\;\;$$
+
+## Probabilidade inversa ponderada estabilizada 12.3
+
+
+Onde $f(A)$ é chamado de fator estabilizador e é responsávelpor estreitar o alcance dos pesos padronizados:
+
+$$\text{SW}^A = \frac{f(A)}{f(A|L)}$$
+
+- Esperamos que a média do SW seja 1
+
+Isso ocorre porque o tamanho da pseudo população é igual à população de estudo.
+
+
+## Probabilidade inversa ponderada estabilizada 12.3
+
+Para estimar o SW:
+
+- O denominador é estimado da mesma forma que em 12.2
+- O numerador  é estimado com uma regressão log desconsiderando os confundidores ($L$). 
+$$ \hat{SW} = \begin{cases} \frac{\hat P(A=1)}{\hat P(A=1|L)}, & \text{se tratado} \\ \frac{1-\hat P(A=1)}{1-\hat P(A=1|L)}, & \text{c.c.} \end{cases}$$
+
+## Probabilidade inversa ponderada estabilizada 12.3
+
+- O efeito causal também é estimado com a mesma GEE de 12.2
+
+- A vantagem do SW no exemplo do capítulo foi um intervalo de confiança para o efeito causal $\theta_1$ menor.
+
+- Segundo Hernán em problemas com a variação no tempo ou tratamentos contínuos SW torna-se mais efetivo.
+
+# Verificando a positividade
+
+## Verificando a positividade - T.P. 12.1
+
+- No exemplo do Cap. existem 4 mulheres de 66 anos (no baseline) e nenhuma delas parou de fumar.
+
+Isso viola uma das condições para usarmos o IPw. Existem 2 maneiras da positividade ser violada.
+
+- Estrutural: Alguns valores não são possíveis de serem tratados.
+
+- Aleatório: Amostras são finitas, se estratificamos por muitos confundidores alguns 0s podem surgir.
+
+
+# Modelos estruturais marginais
+
+## Modelos estruturais marginais 12.4
+
+Agora vamos considerar nosso tratamento contínuo, no exemplo do livro é a intensidade de fumo, medido pela quantidade de cigarros consumidos.
+
+Onde podemos ter interesse em estimar a diferença média na mudança de peso de acordo com a intensidade de cigarros consumidos.
+
+Para este método, consideramos a própria resposta contrafactual como a variável resposta.
+
+$$E[Y^a] = \beta_0 + \beta_1 a$$
+
+## Modelos estruturais marginais 12.4 ()
+
+Se considerarmos $A$ como dicotômico como anteriormente, $\beta_1$ pode ser escrito como
+
+$$\beta_1 = E[Y^{a=1}] - E[Y^{a=0}]$$
+devido a
+$$\beta_0 = E[Y^{a}], \text{ sob a=0 e }\\ \beta_0 +\beta_1 = E[Y^{a}], \text{ sob a=1 e }$$
+
+## Modelos estruturais marginais 12.4
+
+Mais uma vez, queremos estimar a diferença média na mudança de peso de acordo com os diferentes tratamentos (quantidade de cigarro consumido)
+
+$$E[Y^a] - E[Y^{a'}]$$
+Para quaisquer valores de $a$ e $a'$
+
+O modelo proposto no cap. foi 
+
+$$E[Y^a] = \beta_0 + \beta_1 a + \beta_2a^2$$
+Onde $E[Y^{a=0}] = \beta_0$ representa a média de peso ganho sem mudança alguma na intensidade de fumar.
+
+## Modelos estruturais marginais 12.4
+
+Para estimar o SW$^A$ para um tratamento contínuo preciso estimar o denominador $f(A|L)$ que agora torna-se uma f.d.p.
+
+No exemplo, Hernán  assume que $$f(A|L) \sim\text{Normal}(\hat \phi, \sigma^2),$$ onde $\hat \phi$ é o valor predito pela regressão linear do modelo incluindo confundidores e intensidade$^2$. 
+
+E $\sigma^2$ é a variância do modelo linear.
+
+## Modelos estruturais marginais 12.4
+
+>One should be careful when using IPw for continuous treatments.
+
+Também é possível usar modelos estruturais marginais (MSM) para respostas binárias. Por exemplo, estudar o efeito causal em parar de fumar e o risco de morte até o ano X.
+
+Esse modelo tem forma
+
+$$\text{logit} P(D^a) = \alpha_0+\alpha_1 a$$
+onde $\exp(\alpha_1)$ é o OR causal da morte de quem parou de fumar vs. quem não parou de fumar.
+
+
+# Modificação de efeito e MSM
+
+## Modificação de efeito e MSM 12.5
+
+- Podemos adicionar covariáveis que não são confundidores mas que acreditamos que modifiquem o efeito do tratamento numa resposta.
+
+Por exemplo, sexo ($V$) altera o efeito de parar de fumar no ganho de peso.
+
+$$E[Y^a|V] = \beta_0 + \beta_1 a + \beta_2 V a + \beta_3 V$$
+
+
+## Modificação de efeito e MSM 12.5
+
+Podemos estimar os parâmetros ajustando uma regressão linear
+
+$$E[Y|A,V] = \theta_0 + \theta_1 A + \theta_2 VA + \theta_3 V$$
+por Minimos quadrados ponderados via SW$^A$.
+
+A diferença é que no numerador ajustamos a regressão logística usando a covariável $V$.
+
+# Censura e dados faltantes
+
+## Censura e dados faltantes 12.6
+
+- Selecionar apenas indivíduos que não tem informação faltante na resposta pode introduzir **viés de seleção**.
+
+- No proprio exemplo do cap. existe censura de 63 pessoas, as quais não apresentam informação do peso no ano 1982.
+
+Vamos formalizar para levar a censura em conta
+
+$$ C = \begin{cases} 1, & \text{se o peso não foi aferido} \\ 0, & \text{c.c.} \end{cases}$$
+
+## Censura e dados faltantes 12.6
+
+Construímos um modelo restrito a indivíduos com $C=0$
+
+$$E[Y|A,C=0] = \theta_0 +\theta_1A$$
+Mas isso pode levar ao viés de seleção, mudamos nossos objetivos de estimação de forma que o contrafactual comporte a censura.
+
+Em outras palavras, modelamos o que aconteceria *se* tivéssemos  toda informação
+
+$$E[Y^{a,c}]$$
+
+## Censura e dados faltantes 12.6
+
+Para isso, estimamos o ATE
+
+$$E[Y^{a=1,\;c=0}] - E[Y^{a=0,\;c=0}]$$
+
+:::: {.columns}
+
+::: {.column width="50%"}
+Média de peso ganho **se** todos parassem de fumar **e** ninguem tivesse sido censurado 
+:::
+
+::: {.column width="50%"}
+Média de peso ganho **se** ninguem parasse de fumar **e** ninguem tivesse sido censurado
+:::
+
+::::
+
+
+## Censura e dados faltantes 12.6
+
+Para calcular os pesos IP (W$^{A,C}$) é necessário ajustar por confundidores e pelo viés de seleção;
+
+- Sob permutação para o tratamento conjunto (A,C) condicionado a L
+
+$$Y^{a,c=0} \ind (A,C) |L$$
+- Positividade 
+
+- Consistência
+
+## Censura e dados faltantes 12.6
+
+Escrevemos o IPw como 
+
+$$W^{A,C} = \frac{1}{f(A,C=0|L)}$$
+onde $$f(A,C=0|L) = f(A|L) P(C=0|L,A)$$
+
+Podemos também, calcular o IP estabilizado
+
+$$SW^{A,C} = SW^A SW^C$$
+
+## Censura e dados faltantes 12.6
+
+Onde SW$^A$ foi visto anteriormente e 
+
+$$SW^C = \frac{P(C=0|A)}{P(C=0|L,A)}$$
+Que é responsávelpor criar uma pseudo população do mesmo tamanho da população original depois da censura.
+
+u seja, o SW não elimina a censura, ele apenas faz com que a censura seja aleatória com respeito às covariáveis L ("remove" a seta de L para C).
+
+Estimativas de $P(C=0|L,A)$ via regressão logística.
+
+# Mais em pesos estabilizados
+
+## Mais em pesos estabilizados - T.P. 12.2
+
+Pesos estabilizados $SW^A = \frac{f(A)}{f(A|L)}$ pertencem a uma classe maior de SW.
+
+$$\frac{g(A)}{f(A|L)}$$
+Onde $g(A)$ é qualquer função de A que não é função de L.
+
+Pesos desse tipo são preferíveis em modelos estruturais marginais não saturados. Já que constroem estimadores mais eficientes.
+
+
+# Obrigado pela atenção
