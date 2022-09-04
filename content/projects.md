@@ -4,7 +4,7 @@ title: Projects
 ---
 
 
-- **2020 - Today**  &nbsp;&nbsp; [Interactive platform for evaluating scenarios and mathematical models applied to Sars-CoV-2](https://modelacovid19.rondonia.fiocruz.br/shiny/covidApp/)
+- **2020 - 2022**  &nbsp;&nbsp; [Interactive platform for evaluating scenarios and mathematical models applied to Sars-CoV-2](https://modelacovid19.rondonia.fiocruz.br/shiny/covidApp/)
 
     >A tool that can be used by researchers, managers, among others, so that they can manipulate and work with mathematical modeling and obtain estimates and scenarios for epidemiological issues of surveillance and control of COVID-19.
 
