@@ -104,7 +104,7 @@ disqusShortname = "yourdiscussshortname"
     url = "https://twitter.com/RiversArthur"
 [[params.social]]
     name = "Lattes"
-    icon = "fa fa-book-open"
+    icon = "fa fa-book"
     weight = 2
     url = "http://lattes.cnpq.br/7147796523952771"
 
