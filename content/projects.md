@@ -4,6 +4,14 @@ title: Projects
 ---
 
 
+- **2022 - ** &nbsp; &nbsp; Implementation of the Multiregression Dynamic Model (MDM) method: A new library for Dynamic Bayesian Networks(DBN).
+
+    >An R package to fit and evaluate DBNs. The main focus is to study the causal links of time series in a dynamic context e.g the spread of a pathogen.
+    
+    + Scholarship provided by [PIBIC UFBA - CNPq_IC](https://sisbic.ufba.br/sisbic/Welcome.do###)
+    + Advisor: Lilia Carolina Carneiro Costa
+
+
 - **2020 - 2022**  &nbsp;&nbsp; [Interactive platform for evaluating scenarios and mathematical models applied to Sars-CoV-2](https://modelacovid19.rondonia.fiocruz.br/shiny/covidApp/)
 
     >A tool that can be used by researchers, managers, among others, so that they can manipulate and work with mathematical modeling and obtain estimates and scenarios for epidemiological issues of surveillance and control of COVID-19.

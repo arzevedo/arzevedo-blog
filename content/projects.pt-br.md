@@ -3,6 +3,14 @@ slug: projects
 title: Projetos
 ---
 
+- **2022 - ** &nbsp; &nbsp; Implementação do MDM: Uma nova biblioteca para redes bayesianas dinâmicas.
+
+    >Desenvolvimento de um pacote baseado na linguagem R, capaz de ajustar modelos de redes bayesianas dinâmicas. Em particular, se tem interesse em estudar a relação causal de series temporais, como por exemplo, a transmissão de uma doença entre as diferentes localidades brasileiras.
+    
+    + Bolsa [PIBIC UFBA - CNPq_IC](https://sisbic.ufba.br/sisbic/Welcome.do###)
+    + Orientadora: Lilia Carolina Carneiro Costa
+
+
 - **2020 - 2022** &nbsp; &nbsp; [Plataforma interativa para avaliação de cenários e modelos matemáticos aplicados ao Sars-CoV-2](https://modelacovid19.rondonia.fiocruz.br/shiny/covidApp/)
 
     >Oferecer, de maneira robusta, uma ferramenta que possa ser utilizada por pesquisadores, gestores, entre outros, de forma que consigam manipular e trabalhar com modelagem matemática e obter estimativas e cenários para questões epidemiológicas de vigilância e controle da COVID-19.
