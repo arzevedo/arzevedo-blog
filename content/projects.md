@@ -4,7 +4,7 @@ title: Projects
 ---
 
 
-- **2022 - ** &nbsp; &nbsp; Implementation of the Multiregression Dynamic Model (MDM) method: A new library for Dynamic Bayesian Networks(DBN).
+- **2022 -** &nbsp; &nbsp; Implementation of the Multiregression Dynamic Model (MDM) method: A new library for Dynamic Bayesian Networks(DBN).
 
     >An R package to fit and evaluate DBNs. The main focus is to study the causal links of time series in a dynamic context e.g the spread of a pathogen.
     

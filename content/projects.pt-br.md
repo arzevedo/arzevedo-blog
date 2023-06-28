@@ -3,7 +3,7 @@ slug: projects
 title: Projetos
 ---
 
-- **2022 - ** &nbsp; &nbsp; Implementação do MDM: Uma nova biblioteca para redes bayesianas dinâmicas.
+- **2022 -** &nbsp; &nbsp; Implementação do MDM: Uma nova biblioteca para redes bayesianas dinâmicas.
 
     >Desenvolvimento de um pacote baseado na linguagem R, capaz de ajustar modelos de redes bayesianas dinâmicas. Em particular, se tem interesse em estudar a relação causal de series temporais, como por exemplo, a transmissão de uma doença entre as diferentes localidades brasileiras.
     
