@@ -19,7 +19,7 @@ disqusShortname = "yourdiscussshortname"
     description = "Azevedo's personal website"
     keywords = "Statistics,personal"
     info = "Statistics undergrad at Federal University of Bahia"
-    avatarURL = "images/avatar.jpg"
+    avatarURL = "images/avatar.png"
     #gravatar = "john.doe@example.com"
     footerContent = ""
 
